@@ -32,11 +32,18 @@
       <p class="mb-2"><strong>Transkrip:</strong> {{ transcript }}</p>
       <p class="mb-2"><strong>Label:</strong> {{ label }}</p>
       <p class="mb-2"><strong>Rekomendasi:</strong></p>
-      <ul>
+      <!-- <ul>
       <li v-for="(item, index) in items" :key="index">
         {{ item.name }} - {{ item.base_price }}
       </li>
-</ul>
+</ul> -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+  <div v-for="(item, index) in items" :key="index" class="bg-gray-100 rounded-md shadow p-4">
+    <p class="font-bold">{{ item.name }}</p>
+    <p class="text-gray-500">Rp {{ item.base_price }}</p>
+  </div>
+</div>
+
 
     </div>
   </div>
@@ -140,7 +147,8 @@ export default {
   this.transcript = event.results[0][0].transcript;
   this.items = [];
    // Panggil API Halodoc untuk mendapatkan rekomendasi obat berdasarkan hasil transkripsi
-   const q = this.transcript; console.log(this.transcript)
+   const q = this.transcript; 
+   console.log(this.transcript)
       fetch(`http://localhost:3003/api/search?q=${q}`)
       .then(response => response.json())
       .then(data => {
