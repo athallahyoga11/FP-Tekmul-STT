@@ -3,15 +3,16 @@
     <h1 class="text-4xl font-bold mb-4">WADUH</h1>
     <button @click="sortByHighestPrice" class="px-4 py-2 rounded-md bg-red-500 text-white hover:bg-red-600">Harga Termahal</button>
     <button @click="sortByLowestPrice" class="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 ml-2">Harga Termurah</button>
-    <button @click="sortByBestRating" class="px-4 py-2 rounded-md bg-green-500 text-white hover:bg-green-600 ml-2">Rating Terbaik</button>
-    <button @click="showBookmark = !showBookmark" class="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600">Bookmark Manager</button>
+   
+    <button @click="sortByBestRating" class="px-4 py-2 rounded-md bg-green-500 text-white hover:bg-green-600 ml-2">Rating</button>
+    <button @click="showBookmark = !showBookmark" class="px-4 py-2 mx-2 rounded-md bg-blue-500 text-white hover:bg-blue-600">Bookmarked</button>
 
 <div v-if="showBookmark">
   <div v-if="bookmarkedItems.length > 0">
-    <h2 class="text-xl font-bold mb-4">Bookmarks ({{ bookmarkedItems.length }})</h2>
+    <h2 class="text-xl font-bold mb-4">Yakin mau beli Kidz?({{ bookmarkedItems.length }})</h2>
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       <div v-for="(item, index) in bookmarkedItems" :key="index" class="bg-gray-100 rounded-md shadow p-4">
-        <img :src="images.find((img, i) => i === index)" alt="" class="w-full h-40 object-cover mb-2">
+        <img :src="item.thumbnail_image" alt="" class="w-full h-auto object-cover mb-2">
         <p class="font-bold">{{ item.name }}</p>
         <p class="text-gray-500">Rp {{ item.price_amount }}</p>
         <p class="text-gray-500">Stock: {{ item.stock }}</p>
@@ -22,7 +23,45 @@
     </div>
   </div>
 </div>
+<div v-if="selectedItem" class="fixed z-10 inset-0 overflow-y-auto">
+  <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 transition-opacity">
+      <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+    </div>
 
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
+      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <div class="sm:flex sm:items-start">
+          <div class="mt-3 text-center sm:mt-0 sm:text-left">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-2">{{ selectedItem.name }}</h3>
+            <img :src="selectedItem.thumbnail_image" alt="" class="w-full h-auto object-cover mb-2">
+            <p class="text-gray-500 mb-2">Rp {{ selectedItem.price_amount }}</p>
+            <p class="text-gray-500">Stock: {{ selectedItem.stock }}</p>
+            <p class="text-gray-500">{{ selectedItem.sold }}</p>
+            <p class="text-gray-500">★{{ selectedItem.rating }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <a v-bind:href="'https://www.alodokter.com/aloshop/products/' + selectedItem.name.replace(/\s+/g, '-') + '/' + selectedItem.id" target="_blank" rel="noopener noreferrer" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
+  Beli Sekarang
+</a>
+        <button type="button" @click="selectedItem = null" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+          Tutup
+        </button>
+        <button
+    type="button"
+    @click="toggleBookmark(selectedItem)"
+    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-500 text-base font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+  >
+    {{ bookmarkedItems.some((i) => i.id === selectedItem.id) ? 'Unbookmark' : 'Bookmark'}}
+  </button>
+      </div>
+    </div>
+  </div>
+</div>
 
     <textarea
       v-model="transcript"
@@ -38,18 +77,9 @@
       >
         Start Recording
       </button>
-      <button
-        @click="stopRecording"
-        :disabled="!isRecording"
-        class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-      >
-        Stop Recording
-      </button>
       <button @click="removeResult" :disabled="!result" class="bg-gray-500 text-white py-2 px-4 rounded-md cursor-pointer mt-4">Remove</button>
     </div>
     <div v-if="transcript">
-      <p class="mb-2"><strong>Transkrip:</strong> {{ transcript }}</p>
-      <p class="mb-2"><strong>Label:</strong> {{ label }}</p>
       <p class="mb-2"><strong>Rekomendasi:</strong></p>
       <!-- <ul>
       <li v-for="(item, index) in items" :key="index">
@@ -202,6 +232,7 @@ export default {
       images : [],
       selectedItem: null,
       bookmarkedItems: [],
+      sold: [],
       showBookmark: false, // status tampilan daftar bookmark (default: sembunyikan)
     };
   },
@@ -221,6 +252,8 @@ export default {
   if (savedSelectedItem) {
     this.selectedItem = JSON.parse(savedSelectedItem);
   }
+
+  this.selectedItem = null
 },
 
 
@@ -240,6 +273,10 @@ sortByLowestPrice() {
 
 sortByBestRating() {
   return this.items.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+},
+
+sortByBestSeller() {
+  return this.items.sort((a, b) => parseFloat(b.sold) - parseFloat(a.sold));
 },
 
 toggleBookmark(item) {
@@ -285,7 +322,7 @@ toggleBookmark(item) {
         rating: obj.rating,
         price_amount: obj.price.amount,
         stock: obj.stock,
-        sold: obj.total_product_sold
+        sold: obj.total_product_sold,
       }));
       this.items = results;
       this.images = data.result.data.map(obj => obj.thumbnail_image);
