@@ -1,10 +1,29 @@
 <template>
   <div class="container mx-auto mt-10">
-    <h1 class="text-4xl font-bold mb-4">Ingpo Obat</h1>
-    <select v-model="selectedLang" class="border p-2 mb-4">
-      <option value="en-US">English (US)</option>
-      <option value="id-ID">Indonesia</option>
-    </select>
+    <h1 class="text-4xl font-bold mb-4">WADUH</h1>
+    <button @click="sortByHighestPrice" class="px-4 py-2 rounded-md bg-red-500 text-white hover:bg-red-600">Harga Termahal</button>
+    <button @click="sortByLowestPrice" class="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 ml-2">Harga Termurah</button>
+    <button @click="sortByBestRating" class="px-4 py-2 rounded-md bg-green-500 text-white hover:bg-green-600 ml-2">Rating Terbaik</button>
+    <button @click="showBookmark = !showBookmark" class="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600">Bookmark Manager</button>
+
+<div v-if="showBookmark">
+  <div v-if="bookmarkedItems.length > 0">
+    <h2 class="text-xl font-bold mb-4">Bookmarks ({{ bookmarkedItems.length }})</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div v-for="(item, index) in bookmarkedItems" :key="index" class="bg-gray-100 rounded-md shadow p-4">
+        <img :src="images.find((img, i) => i === index)" alt="" class="w-full h-40 object-cover mb-2">
+        <p class="font-bold">{{ item.name }}</p>
+        <p class="text-gray-500">Rp {{ item.price_amount }}</p>
+        <p class="text-gray-500">Stock: {{ item.stock }}</p>
+        <p class="text-gray-500">{{ item.sold }}</p>
+        <p class="text-gray-500">★{{ item.rating }}</p>
+        <button @click="showDetail(item)" class="px-4 py-2 rounded-md bg-red-500 text-white hover:bg-red-600">More</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
     <textarea
       v-model="transcript"
       rows="5"
@@ -39,10 +58,13 @@
 </ul> -->
 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
   <div v-for="(item, index) in items" :key="index" class="bg-gray-100 rounded-md shadow p-4">
-    <img :src="images[index]" alt="" class="w-full h-40 object-cover mb-2">
+    <img :src="item.thumbnail_image" alt="" class="w-full h-40 object-cover mb-2">
     <p class="font-bold">{{ item.name }}</p>
-    <p class="text-gray-500">Rp {{ item.base_price }}</p>
-    <button @click="showDetail(item)" class="px-4 py-2 rounded-md bg-red-500 text-white hover:bg-red-600">details</button>
+    <p class="text-gray-500">Rp {{ item.price_amount }}</p>
+    <p class="text-gray-500">Stock: {{ item.stock }}</p>
+    <p class="text-gray-500">{{ item.sold }}</p>
+    <p class="text-gray-500">★{{ item.rating }}</p>
+    <button @click="showDetail(item)" class="px-4 py-2 rounded-md bg-red-500 text-white hover:bg-red-600">More</button>
   </div>
 </div>
 
@@ -60,23 +82,32 @@
         <div class="sm:flex sm:items-start">
           <div class="mt-3 text-center sm:mt-0 sm:text-left">
             <h3 class="text-lg leading-6 font-medium text-gray-900 mb-2">{{ selectedItem.name }}</h3>
-            <img :src="selectedItem.image_url" alt="" class="w-full h-auto object-cover mb-2">
-            <p class="text-gray-500 mb-2">Rp {{ selectedItem.base_price }}</p>
-            <p class="text-gray-500">{{ selectedItem.description }}</p>
-            <p class="text-gray-500">{{ selectedItem.rating }}</p>
+            <img :src="selectedItem.thumbnail_image" alt="" class="w-full h-auto object-cover mb-2">
+            <p class="text-gray-500 mb-2">Rp {{ selectedItem.price_amount }}</p>
+            <p class="text-gray-500">Stock: {{ selectedItem.stock }}</p>
+            <p class="text-gray-500">{{ selectedItem.sold }}</p>
+            <p class="text-gray-500">★{{ selectedItem.rating }}</p>
           </div>
         </div>
       </div>
       <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-        <a v-bind:href="'https://www.halodoc.com/obat-dan-vitamin/' + selectedItem.name.replace(/\s+/g, '-')" target="_blank" rel="noopener noreferrer" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
+        <a v-bind:href="'https://www.alodokter.com/aloshop/products/' + selectedItem.name.replace(/\s+/g, '-') + '/' + selectedItem.id" target="_blank" rel="noopener noreferrer" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm">
   Beli Sekarang
 </a>
         <button type="button" @click="selectedItem = null" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
           Tutup
         </button>
+        <button
+    type="button"
+    @click="toggleBookmark(selectedItem)"
+    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-500 text-base font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+  >
+    {{ bookmarkedItems.some((i) => i.id === selectedItem.id) ? 'Unbookmark' : 'Bookmark'}}
+  </button>
       </div>
     </div>
   </div>
+  
 </div>
 
 
@@ -169,14 +200,61 @@ export default {
       base_prices : [],
       items : [],
       images : [],
-      selectedItem: null
+      selectedItem: null,
+      bookmarkedItems: [],
+      showBookmark: false, // status tampilan daftar bookmark (default: sembunyikan)
     };
   },
+
+  mounted() {
+  const savedBookmarks = localStorage.getItem('bookmarkedItems');
+  if (savedBookmarks) {
+    this.bookmarkedItems = JSON.parse(savedBookmarks);
+  }
+
+  const savedItems = localStorage.getItem('items');
+  if (savedItems) {
+    this.items = JSON.parse(savedItems);
+  }
+
+  const savedSelectedItem = localStorage.getItem('selectedItem');
+  if (savedSelectedItem) {
+    this.selectedItem = JSON.parse(savedSelectedItem);
+  }
+},
+
+
   methods: {
 
     showDetail(item) {
       this.selectedItem = item;
     console.log(this.selectedItem)},
+
+    sortByHighestPrice() {
+  this.items.sort((a, b) => parseFloat(b.price_amount) - parseFloat(a.price_amount)), parseFloat(b.thumbnail_image) - parseFloat(a.thumbnail_image);
+},
+
+sortByLowestPrice() {
+  this.items.sort((a, b) => parseFloat(a.price_amount) - parseFloat(b.price_amount));
+},
+
+sortByBestRating() {
+  return this.items.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+},
+
+toggleBookmark(item) {
+      const index = this.bookmarkedItems.findIndex((i) => i.id === item.id);
+      if (index > -1) {
+        this.bookmarkedItems.splice(index, 1);
+      } else {
+        this.bookmarkedItems.push(item);
+      }
+
+      localStorage.setItem('bookmarkedItems', JSON.stringify(this.bookmarkedItems));
+    },
+    isBookmarked(item) {
+      return this.bookmarkedItems.some((i) => i.id === item.id);
+    },
 
     startRecording() {
       this.isRecording = true;
@@ -197,17 +275,22 @@ export default {
    // Panggil API Halodoc untuk mendapatkan rekomendasi obat berdasarkan hasil transkripsi
    const q = this.transcript; 
    console.log(this.transcript)
-      fetch(`http://localhost:3003/api/search?q=${q}`)
-      .then(response => response.json())
-      .then(data => {
-          const results = data.result.map(obj => ({
-            name: obj.name,
-            base_price: obj.base_price,
-            image_url: obj.image_url
-          }));
-          this.items = results;
-          this.images = data.result.map(obj => obj.image_url);
-          this.selectedItem = data[0];
+   fetch(`http://localhost:3003/api/search?q=${q}`)
+  .then(response => response.json())
+  .then(data => {
+      const results = data.result.data.map(obj => ({
+        name: obj.name,
+        id: obj.id,
+        thumbnail_image: obj.thumbnail_image,
+        rating: obj.rating,
+        price_amount: obj.price.amount,
+        stock: obj.stock,
+        sold: obj.total_product_sold
+      }));
+      this.items = results;
+      this.images = data.result.data.map(obj => obj.thumbnail_image);
+
+  
 // for (let i = 0; i < data.length; i++) {
 // recommendations.push(data[i].name);
 // }
